@@ -20,9 +20,33 @@ while getopts "s:i:o:" arg; do
     esac
 done
 
+if [[ -z $inputfiles ]]
+then
+
+echo "input girilmedi"
+exit
+
+fi
+
+if [[ -z $outputfile ]]
+then
+
+echo "output girilmedi"
+exit
+
+fi
+
+if [[ -z $splitargs ]]
+then
+
+echo "split argümanı girilmedi"
+exit
+
+fi
+
+
 column_names=$(cat $inputfiles | head -n 1)
 
-# echo $column_names
 
 oldIFS=$IFS
 
@@ -38,7 +62,6 @@ IFS=$oldIFS
 IFS=" "
 read -r -a input_array <<< $inputfiles
 IFS=$oldIFS
-
 
 for i in "${input_array[@]}"
 do
@@ -69,18 +92,6 @@ rm temp.csv
 
 
 
-# for i in "${alllines[@]}";do
-
-# echo $i
-# echo aaaaaaaaaaaaaaaaaaaaaaaaa
-
-# done
-
-# exit
-
-#TODO Değiştir
-# text=$(cat $inputfiles | tail -n 1 | sed -E 's/([a-Z]),([a-Z])/\1#\2/g' | sed -E 's/([a-Z]), /\1# /g')
-
 for (( k = 0; k < ${#alllines[@]}; k++));do
 text=${alllines[$k]}
 
@@ -88,18 +99,12 @@ IFS=$','
 
 read  -r -a features_array <<< $text
 
-# for i in ${features_array[*]};do
-
-# echo $i
-
-# done
 
 features_array[26]=""
 
-#echo ${column_array[26]}
 features_array[18]=${features_array[0]}
 features_array[22]=$(echo $(($(($(date --date="$(echo ${features_array[9]} | sed "s/\"//g")" +%s) - $( date --date="${features_array[3]}-01-01" +%s ))) / (60*60*24) ))  )
-features_array[19]=$(printf '%.3f\n' $(echo "${features_array[0]} / ${features_array[22]}" | bc -l))
+features_array[19]=$(printf '%.3f\n' $(echo "$((${features_array[0]} * 365 / ${features_array[22]} ))" | bc -l))
 features_array[21]=$(( $(echo ${features_array[1]} | grep -o "#" | wc -l) + 1 ))
 features_array[20]=$(printf '%.3f\n' $(echo "${features_array[0]} / ${features_array[21]}" | bc -l))
 
@@ -112,18 +117,18 @@ echo "test" > /dev/null
 else
 
 features_array[26]=$((${features_array[17]} - ${features_array[16]}))
-echo ${features_array[26]}
+# echo ${features_array[26]}
 
 fi
 
 
 
 
-# echo ${features_array[20]}
+
 
 newline=""
 
-# echo ${#features_array[@]}
+
 
 for i in "${features_array[@]}";
  do
@@ -131,32 +136,17 @@ for i in "${features_array[@]}";
     newline="$newline$i,"
 
 done
-# echo ${#features_array[@]}
-# echo ${features_array[0]}
+
 
 newline=${newline::-1}
 
-# echo "$newline"
+
 alllines[$k]=$newline
 
 done
 
 
 
-
-
-
-
-
-# echo $(cat $inputfiles | sed "s/$column_names//g" | sed "s/\",\"/æ/g")
-#| sed "s/,/€/g" | sed "s/æ/\",\"/g")
-
-
-# for i in "${alllines[@]}";do
-
-# echo "$i"
-
-# done
 
 
 ##sort kısmı
@@ -194,8 +184,6 @@ done
 
 done
 
-echo ${splitterarr[@]}
-# echo ${#alllines[@]}
 
 for i in "${alllines[@]}"
 do
@@ -226,3 +214,4 @@ echo $newheader > $outputfile
 sort $args temp2.csv | sed "s/#/,/g" >> $outputfile
 
 rm temp2.csv
+
